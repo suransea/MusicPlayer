@@ -22,5 +22,9 @@ public enum MusicPlayerName: String {
     case appleMusic = "Music"
     case spotify    = "Spotify"
 
+    #else
+
+    case unknown
+
     #endif
 }

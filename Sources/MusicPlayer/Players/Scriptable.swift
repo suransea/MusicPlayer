@@ -11,18 +11,20 @@
 
 import Foundation
 import LXMusicPlayer
-import CXShim
-import CXExtensions
+import Observation
 
 extension MusicPlayers {
     
-    public final class Scriptable: ObservableObject {
+    @Observable
+    public final class Scriptable {
         
+        @ObservationIgnored
         private var player: LXScriptingMusicPlayer
-        private var cancellers: Set<AnyCancellable> = []
+        @ObservationIgnored
+        private var observations: [NSKeyValueObservation] = []
         
-        @Published public private(set) var currentTrack: MusicTrack?
-        @Published public private(set) var playbackState: PlaybackState
+        public private(set) var currentTrack: MusicTrack?
+        public private(set) var playbackState: PlaybackState
         
         public var playerBundleID: String {
             return player.playerBundleID
@@ -35,31 +37,19 @@ extension MusicPlayers {
             self.player = player
             self.currentTrack = player.currentTrack.map(MusicTrack.init)
             self.playbackState = PlaybackState(lxState: player.playerState)
-            player.cx
-                .publisher(for: \.currentTrack)
-                .map { $0.map(MusicTrack.init) }
-                .receive(on: DispatchQueue.playerUpdate.cx)
-                .assign(to: \.currentTrack, weaklyOn: self)
-                .store(in: &cancellers)
-            player.cx
-                .publisher(for: \.playerState)
-                .map(PlaybackState.init)
-                .receive(on: DispatchQueue.playerUpdate.cx)
-                .assign(to: \.playbackState, weaklyOn: self)
-                .store(in: &cancellers)
+            observations.append(player.observe(\.currentTrack) { [weak self] (player, _) in
+                guard let self = self else { return }
+                self.currentTrack = player.currentTrack.map(MusicTrack.init)
+            })
+            observations.append(player.observe(\.playerState) { [weak self] (player, _) in
+                guard let self = self else { return }
+                self.playbackState = PlaybackState(lxState: player.playerState)
+            })
         }
     }
 }
 
 extension MusicPlayers.Scriptable: MusicPlayerProtocol {
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $currentTrack.eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $playbackState.eraseToAnyPublisher()
-    }
     
     public var name: MusicPlayerName? {
         return MusicPlayerName(lxName: player.playerName)!

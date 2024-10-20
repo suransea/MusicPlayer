@@ -7,18 +7,20 @@
 //  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 
-import CXShim
 import DBus
 import Foundation
 import MPRIS
+import Observation
 
 extension MusicPlayers {
     /// Represents a [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/) music player.
-    public final class MPRIS: ObservableObject {
+    @Observable
+    public final class MPRIS {
         private let player: MediaPlayer2
+        @ObservationIgnored
         private var disposables: [() throws -> Void] = []
-        @Published public private(set) var currentTrack: MusicTrack?
-        @Published public private(set) var playbackState: PlaybackState = .stopped
+        public private(set) var currentTrack: MusicTrack?
+        public private(set) var playbackState: PlaybackState = .stopped
 
         init(player: MediaPlayer2) throws {
             self.player = player
@@ -69,14 +71,6 @@ extension MusicPlayers.MPRIS {
 
 extension MusicPlayers.MPRIS: MusicPlayerProtocol {
     public var name: MusicPlayerName? { nil }
-
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        $currentTrack.eraseToAnyPublisher()
-    }
-
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        $playbackState.eraseToAnyPublisher()
-    }
 
     public var playbackTime: TimeInterval {
         get {

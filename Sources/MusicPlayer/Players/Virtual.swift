@@ -8,14 +8,15 @@
 //
 
 import Foundation
-import CXShim
+import Observation
 
 extension MusicPlayers {
     
-    open class Virtual: ObservableObject {
+    @Observable
+    open class Virtual {
         
-        @Published public var currentTrack: MusicTrack?
-        @Published public var playbackState: PlaybackState
+        public var currentTrack: MusicTrack?
+        public var playbackState: PlaybackState
         
         public init(track: MusicTrack? = nil, state: PlaybackState = .stopped) {
             currentTrack = track
@@ -30,14 +31,6 @@ extension MusicPlayers {
 }
 
 extension MusicPlayers.Virtual: MusicPlayerProtocol {
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $currentTrack.eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $playbackState.eraseToAnyPublisher()
-    }
     
     public var name: MusicPlayerName? {
         return nil

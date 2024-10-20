@@ -11,18 +11,19 @@
 
 import UIKit
 import MediaPlayer
-import CXShim
+import Observation
 
 extension MusicPlayers {
 
-    public final class AppleMusic: ObservableObject {
+    @Observable
+    public final class AppleMusic {
         
         private let musicPlayer = MPMusicPlayerController.systemMusicPlayer
         
-        @Published public var isAuthorized: Bool = MPMediaLibrary.authorizationStatus() == .authorized
+        public var isAuthorized: Bool = MPMediaLibrary.authorizationStatus() == .authorized
         
-        @Published public private(set) var currentTrack: MusicTrack?
-        @Published public private(set) var playbackState: PlaybackState = .stopped
+        public private(set) var currentTrack: MusicTrack?
+        public private(set) var playbackState: PlaybackState = .stopped
         
         public init() {
             musicPlayer.beginGeneratingPlaybackNotifications()
@@ -44,10 +45,6 @@ extension MusicPlayers {
 }
 
 extension MusicPlayers.AppleMusic: MusicPlayerAuthorization {
-    
-    public var authorizationStatusWillChange: AnyPublisher<Bool, Never> {
-        return $isAuthorized.eraseToAnyPublisher()
-    }
     
     public func requestAuthorizationIfNeeded() {
         switch MPMediaLibrary.authorizationStatus() {
@@ -83,14 +80,6 @@ extension MusicPlayers.AppleMusic: MusicPlayerProtocol {
             musicPlayer.currentPlaybackTime = newValue
             playbackState = playbackState.withTime(newValue)
         }
-    }
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $currentTrack.eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $playbackState.eraseToAnyPublisher()
     }
     
     public func resume() {

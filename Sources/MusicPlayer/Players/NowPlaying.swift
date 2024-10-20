@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import CXShim
+import Observation
 
 extension MusicPlayers {
     
@@ -25,22 +25,21 @@ extension MusicPlayers {
             }
         }
         
-        private var selectNewPlayerCanceller: AnyCancellable?
-        
         public init(players: [MusicPlayerProtocol]) {
             self.players = players
             super.init()
+            selectingNewPlayer()
+        }
+
+        private func selectingNewPlayer() {
             selectNewPlayer()
-            selectNewPlayerCanceller = $designatedPlayer
-                .map {
-                    $0?.objectWillChange.eraseToAnyPublisher() ??
-                        Publishers.MergeMany(players.map { $0.objectWillChange }).eraseToAnyPublisher()
-                }
-                .switchToLatest()
-                .receive(on: DispatchQueue.playerUpdate.cx)
-                .sink { [weak self] _ in
-                    self?.selectNewPlayer()
-                }
+            withObservationTracking {
+                _ = self.designatedPlayer
+                _ = self.playbackState
+            } onChange: { [weak self] in
+                guard let self = self else { return }
+                Task { self.selectingNewPlayer() }
+            }
         }
         
         private func selectNewPlayer() {

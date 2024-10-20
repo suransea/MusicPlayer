@@ -10,17 +10,18 @@
 #if canImport(SpotifyiOSWrapper)
 
 import UIKit
-import CXShim
 import SpotifyiOSWrapper
+import Observation
 
 extension MusicPlayers {
     
+    @Observable
     public final class SpotifyiOS: NSObject, SPTAppRemoteDelegate, SPTAppRemotePlayerStateDelegate {
         
         public static let accessTokenDefaultsKey = "ddddxxx.LyricsKit.SpotifyAccessToken"
         
-        @Published public private(set) var currentTrack: MusicTrack?
-        @Published public private(set) var playbackState: PlaybackState = .stopped
+        public private(set) var currentTrack: MusicTrack?
+        public private(set) var playbackState: PlaybackState = .stopped
         
         private let appRemote: SPTAppRemote
         
@@ -115,7 +116,7 @@ extension MusicPlayers {
     }
 }
 
-extension MusicPlayers.SpotifyiOS: MusicPlayerProtocol, CXShim.ObservableObject {
+extension MusicPlayers.SpotifyiOS: MusicPlayerProtocol {
     
     public var name: MusicPlayerName? {
         return .spotify
@@ -132,14 +133,7 @@ extension MusicPlayers.SpotifyiOS: MusicPlayerProtocol, CXShim.ObservableObject 
             appRemote.playerAPI?.seek(toPosition: positionInMs, callback: nil)
         }
     }
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $currentTrack.eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $playbackState.eraseToAnyPublisher()
-    }
+
     
     public func resume() {
         appRemote.playerAPI?.resume(nil)

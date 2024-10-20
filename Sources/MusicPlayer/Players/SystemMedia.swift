@@ -11,19 +11,21 @@
 
 import Foundation
 import MediaRemotePrivate
-import CXShim
+import Observation
 
 extension MusicPlayers {
     
-    public final class SystemMedia: ObservableObject {
+    @Observable
+    public final class SystemMedia {
         
         public static var available: Bool {
             return MRIsMediaRemoteLoaded
         }
         
-        @Published public private(set) var currentTrack: MusicTrack?
-        @Published public private(set) var playbackState: PlaybackState = .stopped
+        public private(set) var currentTrack: MusicTrack?
+        public private(set) var playbackState: PlaybackState = .stopped
         
+        @ObservationIgnored
         private var systemPlaybackState: SystemPlaybackState?
         
         public init?() {
@@ -98,14 +100,6 @@ extension MusicPlayers {
 }
 
 extension MusicPlayers.SystemMedia: MusicPlayerProtocol {
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $currentTrack.eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $playbackState.eraseToAnyPublisher()
-    }
     
     public var name: MusicPlayerName? {
         return nil

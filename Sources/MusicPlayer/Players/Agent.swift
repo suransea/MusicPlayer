@@ -8,25 +8,17 @@
 //
 
 import Foundation
-import CXShim
+import Observation
 
 extension MusicPlayers {
     
     /// Delegate events to another player
-    open class Agent: ObservableObject {
+    @Observable
+    open class Agent {
         
-        @Published public var designatedPlayer: MusicPlayerProtocol?
+        public var designatedPlayer: MusicPlayerProtocol?
         
-        public let objectWillChange = ObservableObjectPublisher()
-        
-        private var objectWillChangeCanceller: AnyCancellable?
-        
-        public init() {
-            objectWillChangeCanceller = $designatedPlayer
-                .map { $0?.objectWillChange.eraseToAnyPublisher() ?? Just(()).eraseToAnyPublisher() }
-                .switchToLatest()
-                .sink { [weak self] _ in self?.objectWillChange.send() }
-        }
+        public init() {}
     }
 }
 
@@ -47,18 +39,6 @@ extension MusicPlayers.Agent: MusicPlayerProtocol {
     public var playbackTime: TimeInterval {
         get { return designatedPlayer?.playbackTime ?? 0 }
         set { designatedPlayer?.playbackTime = newValue }
-    }
-    
-    public var currentTrackWillChange: AnyPublisher<MusicTrack?, Never> {
-        return $designatedPlayer.map { $0?.currentTrackWillChange ?? Just(nil).eraseToAnyPublisher() }
-            .switchToLatest()
-            .eraseToAnyPublisher()
-    }
-    
-    public var playbackStateWillChange: AnyPublisher<PlaybackState, Never> {
-        return $designatedPlayer.map { $0?.playbackStateWillChange ?? Just(.stopped).eraseToAnyPublisher() }
-            .switchToLatest()
-            .eraseToAnyPublisher()
     }
     
     public func resume() {

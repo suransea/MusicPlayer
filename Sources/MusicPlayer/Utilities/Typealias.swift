@@ -8,10 +8,6 @@
 //
 
 import Foundation
-import CXShim
-
-public typealias Published = CXShim.Published
-public typealias ObservableObject = CXShim.ObservableObject
 
 #if canImport(AppKit)
 

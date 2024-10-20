@@ -10,28 +10,27 @@
 import DBus
 import Foundation
 import MPRIS
+import Observation
 
 extension MusicPlayers {
     /// Just like `NowPlaying`, but automatically find available MPRIS players.
     public final class MPRISNowPlaying: Agent {
         private let sessionManager: MediaPlayer2.SessionManager
-        private var disposables: [() -> Void] = []
 
         init(sessionManager: MediaPlayer2.SessionManager) throws {
             self.sessionManager = sessionManager
             super.init()
-            if let player = sessionManager.activePlayer {
-                designatedPlayer = try MPRIS(player: player)
-            }
-            let stopObserve = sessionManager.observeActivePlayer { [weak self] player in
-                guard let self = self else { return }
-                self.designatedPlayer = player.flatMap { try? MPRIS(player: $0) }
-            }
-            disposables.append(stopObserve)
+            observingActivePlayer()
         }
 
-        deinit {
-            disposables.forEach { $0() }
+        func observingActivePlayer() {
+            designatedPlayer = sessionManager.activePlayer.flatMap { try? MPRIS(player: $0) }
+            withObservationTracking {
+                _ = sessionManager.activePlayer
+            } onChange: { [weak self] in
+                guard let self = self else { return }
+                Task { self.observingActivePlayer() }
+            }
         }
     }
 }

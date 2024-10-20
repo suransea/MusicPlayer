@@ -7,12 +7,11 @@
 //  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 
-import CXShim
+import Observation
 
-public protocol MusicPlayerAuthorization: AnyObject {
+public protocol MusicPlayerAuthorization: Observable {
     
     var isAuthorized: Bool { get }
-    var authorizationStatusWillChange: AnyPublisher<Bool, Never> { get }
     
     func requestAuthorizationIfNeeded()
 }
